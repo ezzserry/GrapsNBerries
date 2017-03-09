@@ -6,5 +6,5 @@ package awstreams.serry.zadfreshapplication.helpers;
 
 public class Constants {
 
-    public static String URL = "https://api.github.com/users/square/repos?page=%s&per_page=%s";
+    public static String URL = "https://api.github.com/users/square/repos?page=%s&per_page=10";
 }

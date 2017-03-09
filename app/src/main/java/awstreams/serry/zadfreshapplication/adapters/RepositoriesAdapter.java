@@ -19,30 +19,29 @@ import butterknife.ButterKnife;
  * Created by PC on 3/8/2017.
  */
 
-public class ReposAdapter extends RecyclerView.Adapter<ReposAdapter.RepositoryHolder> {
+public class RepositoriesAdapter extends RecyclerView.Adapter<RepositoriesAdapter.RepositoryHolder> {
 
-    private boolean isMoreDataAvailable = true;
     private List<Repository> repositoryList;
     private Context mContext;
 
-    public ReposAdapter(List<Repository> repositoryList, Context mContext) {
+    public RepositoriesAdapter(List<Repository> repositoryList, Context mContext) {
         this.repositoryList = repositoryList;
         this.mContext = mContext;
     }
 
     @Override
-    public ReposAdapter.RepositoryHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+    public RepositoriesAdapter.RepositoryHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(mContext).inflate(R.layout.repo_item, null);
-        ReposAdapter.RepositoryHolder productHolder = new ReposAdapter.RepositoryHolder(view);
+        RepositoriesAdapter.RepositoryHolder productHolder = new RepositoriesAdapter.RepositoryHolder(view);
         return productHolder;
     }
 
     @Override
-    public void onBindViewHolder(ReposAdapter.RepositoryHolder holder, int position) {
+    public void onBindViewHolder(RepositoriesAdapter.RepositoryHolder holder, int position) {
         Repository repository = repositoryList.get(position);
         holder.tvName.setText(repository.getName());
         holder.tvDescription.setText(repository.getDescription());
-        holder.tvUsername.setText(repository.getOwner().getLogin());
+        holder.tvUsername.setText(repository.getOwner());
         if (repository.getFork().equals("true")) {
             holder.lContainer.setBackgroundColor(mContext.getResources().getColor(R.color.white));
         }

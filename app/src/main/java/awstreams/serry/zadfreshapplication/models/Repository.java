@@ -15,20 +15,18 @@ public class Repository implements Serializable {
     String name;
     @SerializedName("description")
     String description;
-    @SerializedName("owner")
-    Owner owner;
+
     @SerializedName("fork")
     String fork;
-    @SerializedName("html_url")
-    String html_url;
 
-    public Repository(String id, String name, String description, Owner owner, String fork, String html_url) {
+    String owner;
+
+    public Repository(String id, String name, String description, String owner, String fork) {
         this.id = id;
         this.name = name;
         this.description = description;
         this.owner = owner;
         this.fork = fork;
-        this.html_url = html_url;
     }
 
     public String getId() {
@@ -55,11 +53,11 @@ public class Repository implements Serializable {
         this.description = description;
     }
 
-    public Owner getOwner() {
+    public String getOwner() {
         return owner;
     }
 
-    public void setOwner(Owner owner) {
+    public void setOwner(String owner) {
         this.owner = owner;
     }
 
@@ -71,11 +69,4 @@ public class Repository implements Serializable {
         this.fork = fork;
     }
 
-    public String getHtml_url() {
-        return html_url;
-    }
-
-    public void setHtml_url(String html_url) {
-        this.html_url = html_url;
-    }
 }
