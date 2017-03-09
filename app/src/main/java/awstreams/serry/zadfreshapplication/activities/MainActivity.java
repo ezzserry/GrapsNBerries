@@ -10,18 +10,28 @@ import android.widget.ProgressBar;
 
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
 import org.json.JSONArray;
 
+import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.List;
+
 import awstreams.serry.zadfreshapplication.R;
+import awstreams.serry.zadfreshapplication.adapters.RepositoriesAdapter;
+import awstreams.serry.zadfreshapplication.database.RepositoryModel;
 import awstreams.serry.zadfreshapplication.helpers.ConnectionDetector;
+import awstreams.serry.zadfreshapplication.helpers.EndlessRecyclerViewScrollListener;
 import awstreams.serry.zadfreshapplication.helpers.ServicesHelper;
+import awstreams.serry.zadfreshapplication.models.Repository;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
 public class MainActivity extends AppCompatActivity {
     @BindView(R.id.rv_repositories)
-    RecyclerView rv_repositories;
+    RecyclerView rvRepositories;
     @BindView(R.id.progressBar)
     ProgressBar progressBar;
     @BindView(R.id.swipeRefresh)
@@ -29,7 +39,11 @@ public class MainActivity extends AppCompatActivity {
 
     private Boolean isInternetPresent = false;
     private ConnectionDetector cd;
-    private String page, count;
+    private int myPage = 0;
+
+    private LinearLayoutManager layoutManager;
+    private RepositoriesAdapter repositoriesAdapter;
+    private List<Repository> repositoryList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,35 +54,58 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initViews() {
-        rv_repositories.setHasFixedSize(true);
-        rv_repositories.setLayoutManager(new LinearLayoutManager(this));
+        repositoryList = new ArrayList<>();
+        repositoriesAdapter = new RepositoriesAdapter(repositoryList, this);
+        layoutManager = new LinearLayoutManager(this);
+        rvRepositories.setHasFixedSize(true);
+        rvRepositories.setLayoutManager(layoutManager);
+        rvRepositories.addOnScrollListener(new EndlessRecyclerViewScrollListener(layoutManager) {
+            @Override
+            public void onLoadMore(int page, int totalItemsCount, RecyclerView view) {
+                if (checkConnection()) {
+                    myPage++;
+                    getRepositories(myPage);
+                }
+                else
+                    Snackbar.make(rvRepositories, "check your connection", Snackbar.LENGTH_LONG).setAction("Action", null).show();
+
+            }
+        });
         if (checkConnection())
-            getRepositories("0");
+            getRepositories(myPage);
         else
-            Snackbar.make(rv_repositories, "check your connection", Snackbar.LENGTH_LONG).setAction("Action", null).show();
+            Snackbar.make(rvRepositories, "check your connection", Snackbar.LENGTH_LONG).setAction("Action", null).show();
 
         swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
                 if (checkConnection()) {
-                    getRepositories("0");
+                    getRepositories(myPage);
                 } else {
-                    Snackbar.make(rv_repositories, "could't refresh now", Snackbar.LENGTH_LONG).setAction("Action", null).show();
+                    Snackbar.make(rvRepositories, "could't refresh now", Snackbar.LENGTH_LONG).setAction("Action", null).show();
                     swipeRefreshLayout.setRefreshing(false);
                 }
             }
         });
     }
 
-    private void getRepositories(String page) {
-        ServicesHelper.getInstance().getRepos(this, page, "10", new Response.Listener<JSONArray>() {
+    private void getRepositories(int page) {
+        ServicesHelper.getInstance().getRepos(this, String.valueOf(page), new Response.Listener<JSONArray>() {
             @Override
             public void onResponse(JSONArray response) {
-
+                Type collectionType = new TypeToken<List<Repository>>() {
+                }.getType();
+                for (Repository repository : repositoryList) {
+                    RepositoryModel categoryModel = new RepositoryModel(repository.getId(), repository.getName(), repository.getDescription(), repository.getOwner(), repository.getFork());
+                    categoryModel.save();
+                }
+                repositoryList = (List<Repository>) new Gson().fromJson(response.toString(), collectionType);
+                repositoriesAdapter.notifyItemRangeInserted(repositoriesAdapter.getItemCount(), repositoryList.size() - 1);
             }
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
+                Snackbar.make(rvRepositories, "check your connection", Snackbar.LENGTH_LONG).setAction("Action", null).show();
 
             }
         });
