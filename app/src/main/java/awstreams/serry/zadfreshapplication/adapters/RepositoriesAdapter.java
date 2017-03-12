@@ -4,9 +4,11 @@ import android.content.Context;
 import android.graphics.Color;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
@@ -33,7 +35,7 @@ public class RepositoriesAdapter extends RecyclerView.Adapter<RepositoriesAdapte
 
     @Override
     public RepositoriesAdapter.RepositoryHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(mContext).inflate(R.layout.repo_item, null);
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.repo_item, parent,false);
         RepositoriesAdapter.RepositoryHolder productHolder = new RepositoriesAdapter.RepositoryHolder(view);
         return productHolder;
     }
@@ -41,12 +43,18 @@ public class RepositoriesAdapter extends RecyclerView.Adapter<RepositoriesAdapte
     @Override
     public void onBindViewHolder(RepositoriesAdapter.RepositoryHolder holder, int position) {
         Repository repository = repositoryList.get(position);
-        if (repository.getId() != null) {
+        Log.e("bind item",repository.getName());
+
+        if (repository.getId() != null&&repository.getName()!=null) {
             holder.tvName.setText(repository.getName());
             holder.tvDescription.setText(repository.getDescription());
             holder.tvUsername.setText(repository.getOwner().getLogin());
             if (repository.getFork().equals("true")) {
                 holder.cardView.setBackgroundColor(Color.WHITE);
+            }
+            else if (repository.getFork().equals("false")||repository.getFork().equals(""))
+            {
+                holder.cardView.setBackgroundColor(Color.GREEN);
             }
         }
     }
@@ -63,8 +71,8 @@ public class RepositoriesAdapter extends RecyclerView.Adapter<RepositoriesAdapte
         TextView tvName;
         @BindView(R.id.tv_owner_username)
         TextView tvUsername;
-        @BindView(R.id.cv)
-        CardView cardView;
+        @BindView(R.id.container)
+        LinearLayout cardView;
 
         public RepositoryHolder(View itemView) {
             super(itemView);

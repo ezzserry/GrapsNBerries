@@ -6,6 +6,7 @@ import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.View;
 
 import com.android.volley.Response;
@@ -39,7 +40,7 @@ public class MainActivity extends AppCompatActivity {
 
     private Boolean isInternetPresent = false;
     private ConnectionDetector cd;
-    private int myPage = 0;
+    private int repositoryPage = 0;
 
     private LinearLayoutManager layoutManager;
     private RepositoriesAdapter repositoriesAdapter;
@@ -51,30 +52,33 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
         initViews();
+        getRepositories(repositoryPage);
+
     }
 
     private void initViews() {
         repositoryList = new ArrayList<>();
         repositoriesAdapter = new RepositoriesAdapter(repositoryList, this);
         layoutManager = new LinearLayoutManager(this);
-        rvRepositories.setHasFixedSize(true);
         rvRepositories.setLayoutManager(layoutManager);
+        rvRepositories.setAdapter(repositoriesAdapter);
+
+        if (checkConnection())
+            getRepositories(repositoryPage);
+        else
+            Snackbar.make(rvRepositories, "check your connection", Snackbar.LENGTH_LONG).setAction("Action", null).show();
+
         rvRepositories.addOnScrollListener(new EndlessRecyclerViewScrollListener(layoutManager) {
             @Override
             public void onLoadMore(int page, int totalItemsCount, RecyclerView view) {
                 if (checkConnection()) {
-                    myPage++;
-                    getMoreProducts(myPage);
+                    repositoryPage++;
+                    getRepositories(repositoryPage);
                 } else
                     Snackbar.make(rvRepositories, "check your connection", Snackbar.LENGTH_LONG).setAction("Action", null).show();
 
             }
         });
-        if (checkConnection())
-            getRepositories(myPage);
-        else
-            Snackbar.make(rvRepositories, "check your connection", Snackbar.LENGTH_LONG).setAction("Action", null).show();
-
         swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
@@ -86,51 +90,28 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+
     }
 
     private void getRepositories(int page) {
         ServicesHelper.getInstance().getRepos(this, String.valueOf(page), new Response.Listener<JSONArray>() {
             @Override
             public void onResponse(JSONArray response) {
+                Log.e("response", response.toString());
                 Type collectionType = new TypeToken<List<Repository>>() {
                 }.getType();
+
+                List<Repository> repositories = (List<Repository>) new Gson().fromJson(response.toString(), collectionType);
+                repositoryList.addAll(repositories);
+                repositoriesAdapter.notifyItemRangeInserted(repositoriesAdapter.getItemCount(), repositoryList.size() - 1);
+                Log.e("list size", repositoryList.size() + "");
                 for (Repository repository : repositoryList) {
                     RepositoryModel categoryModel = new RepositoryModel(repository.getId(), repository.getName(), repository.getDescription(), repository.getFork(), repository.getOwner().getLogin(), repository.getOwner().getHtml_url());
                     categoryModel.save();
                 }
-                repositoryList = (List<Repository>) new Gson().fromJson(response.toString(), collectionType);
+
                 if (swipeRefreshLayout.isRefreshing())
                     swipeRefreshLayout.setRefreshing(false);
-
-                updateUI(repositoryList);
-            }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                Snackbar.make(rvRepositories, "check your connection", Snackbar.LENGTH_LONG).setAction("Action", null).show();
-
-            }
-        });
-    }
-
-    private void getMoreProducts(int newPage) {
-        repositoryList.add(new Repository());
-        repositoriesAdapter.notifyItemInserted(repositoryList.size() - 1);
-        ServicesHelper.getInstance().getRepos(this, String.valueOf(newPage), new Response.Listener<JSONArray>() {
-            @Override
-            public void onResponse(JSONArray response) {
-                Type collectionType = new TypeToken<List<Repository>>() {
-                }.getType();
-                List<Repository> moreRepositories = (List<Repository>) new Gson().fromJson(response.toString(), collectionType);
-                if (moreRepositories.size() != 0) {
-                    repositoryList.remove(repositoryList.size() - 1);
-                    repositoryList.addAll(moreRepositories);
-                    repositoriesAdapter.notifyDataSetChanged();
-
-                } else {
-                    //telling adapter to stop calling load more as no more server data available
-                    Snackbar.make(rvRepositories, "No More Data Available", Snackbar.LENGTH_LONG).setAction("Action", null).show();
-                }
             }
         }, new Response.ErrorListener() {
             @Override
