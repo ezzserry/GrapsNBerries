@@ -15,6 +15,7 @@ import android.widget.TextView;
 import java.util.List;
 
 import awstreams.serry.zadfreshapplication.R;
+import awstreams.serry.zadfreshapplication.interfaces.OnItemLongListener;
 import awstreams.serry.zadfreshapplication.models.Repository;
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -27,10 +28,12 @@ public class RepositoriesAdapter extends RecyclerView.Adapter<RepositoriesAdapte
 
     private List<Repository> repositoryList;
     private Context mContext;
-
+    OnItemLongListener onItemLongListener;
     public RepositoriesAdapter(List<Repository> repositoryList, Context mContext) {
         this.repositoryList = repositoryList;
         this.mContext = mContext;
+        onItemLongListener = (OnItemLongListener) mContext;
+
     }
 
     @Override
@@ -41,7 +44,7 @@ public class RepositoriesAdapter extends RecyclerView.Adapter<RepositoriesAdapte
     }
 
     @Override
-    public void onBindViewHolder(RepositoriesAdapter.RepositoryHolder holder, int position) {
+    public void onBindViewHolder(RepositoriesAdapter.RepositoryHolder holder, final int position) {
         Repository repository = repositoryList.get(position);
         Log.e("bind item",repository.getName());
 
@@ -56,6 +59,17 @@ public class RepositoriesAdapter extends RecyclerView.Adapter<RepositoriesAdapte
             {
                 holder.cardView.setBackgroundColor(Color.GREEN);
             }
+
+          holder.cardView.setOnLongClickListener(new View.OnLongClickListener() {
+              @Override
+              public boolean onLongClick(View view) {
+                  if (onItemLongListener != null) {
+                      Repository repositoryItem = repositoryList.get(position);
+                      onItemLongListener.OnLongItemClick(repositoryItem);
+                  }
+                  return false;
+              }
+          });
         }
     }
 

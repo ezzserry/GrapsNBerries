@@ -1,8 +1,10 @@
 package awstreams.serry.zadfreshapplication.activities;
 
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
 import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -13,6 +15,7 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import com.raizlabs.android.dbflow.sql.language.SQLite;
 
 import org.json.JSONArray;
 
@@ -26,11 +29,12 @@ import awstreams.serry.zadfreshapplication.database.RepositoryModel;
 import awstreams.serry.zadfreshapplication.helpers.ConnectionDetector;
 import awstreams.serry.zadfreshapplication.helpers.EndlessRecyclerViewScrollListener;
 import awstreams.serry.zadfreshapplication.helpers.ServicesHelper;
+import awstreams.serry.zadfreshapplication.interfaces.OnItemLongListener;
 import awstreams.serry.zadfreshapplication.models.Repository;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements OnItemLongListener {
     @BindView(R.id.rv_repositories)
     RecyclerView rvRepositories;
     //    @BindView(R.id.progressBar)
@@ -74,9 +78,15 @@ public class MainActivity extends AppCompatActivity {
                 if (checkConnection()) {
                     repositoryPage++;
                     getRepositories(repositoryPage);
-                } else
-                    Snackbar.make(rvRepositories, "check your connection", Snackbar.LENGTH_LONG).setAction("Action", null).show();
-
+                } else {
+                    List<RepositoryModel> repositoryModels = SQLite.select().from(RepositoryModel.class).queryList();
+                    if (repositoryModels.size() >= 1) {
+                        for (RepositoryModel repositoryModel : repositoryModels) {
+                            repositoryList.add(repositoryModel.getRepository());
+                        }
+                        repositoriesAdapter.notifyItemRangeInserted(repositoriesAdapter.getItemCount(), repositoryList.size() - 1);
+                    }
+                }
             }
         });
         swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
@@ -117,6 +127,8 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onErrorResponse(VolleyError error) {
                 Snackbar.make(rvRepositories, "check your connection", Snackbar.LENGTH_LONG).setAction("Action", null).show();
+                if (swipeRefreshLayout.isRefreshing())
+                    swipeRefreshLayout.setRefreshing(false);
             }
         });
     }
@@ -137,5 +149,24 @@ public class MainActivity extends AppCompatActivity {
         repositoriesAdapter = new RepositoriesAdapter(repositoryList, this);
         rvRepositories.setAdapter(repositoriesAdapter);
         repositoriesAdapter.notifyDataSetChanged();
+    }
+
+    @Override
+    public void OnLongItemClick(Repository repositoryItem) {
+        new AlertDialog.Builder(this)
+                .setTitle("Delete entry")
+                .setMessage("Are you sure you want to delete this entry?")
+                .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        // continue with delete
+                    }
+                })
+                .setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        // do nothing
+                    }
+                })
+                .setIcon(android.R.drawable.ic_dialog_alert)
+                .show();
     }
 }
