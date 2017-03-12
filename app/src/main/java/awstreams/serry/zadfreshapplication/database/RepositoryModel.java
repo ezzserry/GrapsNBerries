@@ -16,12 +16,13 @@ public class RepositoryModel extends BaseModel {
     public RepositoryModel() {
     }
 
-    public RepositoryModel(String id, String repoName, String description, String ownerName,String fork) {
+    public RepositoryModel(String id, String repoName, String description, String fork, String ownerName, String ownerHtmlUrl) {
         this.id = id;
         this.repoName = repoName;
         this.description = description;
-        this.ownerName = ownerName;
         this.fork = fork;
+        this.ownerName = ownerName;
+        this.ownerHtmlUrl = ownerHtmlUrl;
     }
 
     @PrimaryKey
@@ -35,14 +36,16 @@ public class RepositoryModel extends BaseModel {
     String description;
 
     @Column
+    String fork;
+
+    @Column
     String ownerName;
 
     @Column
-    String fork;
-
+    String ownerHtmlUrl;
 
     public Repository getRepository() {
-        return new Repository(id, repoName, description, ownerName, fork);
+        return new Repository(id,repoName,description,fork,ownerName,ownerHtmlUrl);
     }
 
 }

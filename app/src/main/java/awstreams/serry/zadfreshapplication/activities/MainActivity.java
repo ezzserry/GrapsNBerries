@@ -6,7 +6,7 @@ import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.widget.ProgressBar;
+import android.view.View;
 
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
@@ -32,8 +32,8 @@ import butterknife.ButterKnife;
 public class MainActivity extends AppCompatActivity {
     @BindView(R.id.rv_repositories)
     RecyclerView rvRepositories;
-    @BindView(R.id.progressBar)
-    ProgressBar progressBar;
+    //    @BindView(R.id.progressBar)
+//    ProgressBar progressBar;
     @BindView(R.id.swipeRefresh)
     SwipeRefreshLayout swipeRefreshLayout;
 
@@ -64,9 +64,8 @@ public class MainActivity extends AppCompatActivity {
             public void onLoadMore(int page, int totalItemsCount, RecyclerView view) {
                 if (checkConnection()) {
                     myPage++;
-                    getRepositories(myPage);
-                }
-                else
+                    getMoreProducts(myPage);
+                } else
                     Snackbar.make(rvRepositories, "check your connection", Snackbar.LENGTH_LONG).setAction("Action", null).show();
 
             }
@@ -80,7 +79,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onRefresh() {
                 if (checkConnection()) {
-                    getRepositories(myPage);
+                    getRepositories(0);
                 } else {
                     Snackbar.make(rvRepositories, "could't refresh now", Snackbar.LENGTH_LONG).setAction("Action", null).show();
                     swipeRefreshLayout.setRefreshing(false);
@@ -96,17 +95,47 @@ public class MainActivity extends AppCompatActivity {
                 Type collectionType = new TypeToken<List<Repository>>() {
                 }.getType();
                 for (Repository repository : repositoryList) {
-                    RepositoryModel categoryModel = new RepositoryModel(repository.getId(), repository.getName(), repository.getDescription(), repository.getOwner(), repository.getFork());
+                    RepositoryModel categoryModel = new RepositoryModel(repository.getId(), repository.getName(), repository.getDescription(), repository.getFork(), repository.getOwner().getLogin(), repository.getOwner().getHtml_url());
                     categoryModel.save();
                 }
                 repositoryList = (List<Repository>) new Gson().fromJson(response.toString(), collectionType);
-                repositoriesAdapter.notifyItemRangeInserted(repositoriesAdapter.getItemCount(), repositoryList.size() - 1);
+                if (swipeRefreshLayout.isRefreshing())
+                    swipeRefreshLayout.setRefreshing(false);
+
+                updateUI(repositoryList);
             }
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
                 Snackbar.make(rvRepositories, "check your connection", Snackbar.LENGTH_LONG).setAction("Action", null).show();
 
+            }
+        });
+    }
+
+    private void getMoreProducts(int newPage) {
+        repositoryList.add(new Repository());
+        repositoriesAdapter.notifyItemInserted(repositoryList.size() - 1);
+        ServicesHelper.getInstance().getRepos(this, String.valueOf(newPage), new Response.Listener<JSONArray>() {
+            @Override
+            public void onResponse(JSONArray response) {
+                Type collectionType = new TypeToken<List<Repository>>() {
+                }.getType();
+                List<Repository> moreRepositories = (List<Repository>) new Gson().fromJson(response.toString(), collectionType);
+                if (moreRepositories.size() != 0) {
+                    repositoryList.remove(repositoryList.size() - 1);
+                    repositoryList.addAll(moreRepositories);
+                    repositoriesAdapter.notifyDataSetChanged();
+
+                } else {
+                    //telling adapter to stop calling load more as no more server data available
+                    Snackbar.make(rvRepositories, "No More Data Available", Snackbar.LENGTH_LONG).setAction("Action", null).show();
+                }
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Snackbar.make(rvRepositories, "check your connection", Snackbar.LENGTH_LONG).setAction("Action", null).show();
             }
         });
     }
@@ -119,5 +148,13 @@ public class MainActivity extends AppCompatActivity {
         else
             return false;
 
+    }
+
+    public void updateUI(List<Repository> repositoryList) {
+//        progressBar.setVisibility(View.GONE);
+        rvRepositories.setVisibility(View.VISIBLE);
+        repositoriesAdapter = new RepositoriesAdapter(repositoryList, this);
+        rvRepositories.setAdapter(repositoriesAdapter);
+        repositoriesAdapter.notifyDataSetChanged();
     }
 }

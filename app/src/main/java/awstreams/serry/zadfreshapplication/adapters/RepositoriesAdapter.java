@@ -1,6 +1,8 @@
 package awstreams.serry.zadfreshapplication.adapters;
 
 import android.content.Context;
+import android.graphics.Color;
+import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -39,11 +41,13 @@ public class RepositoriesAdapter extends RecyclerView.Adapter<RepositoriesAdapte
     @Override
     public void onBindViewHolder(RepositoriesAdapter.RepositoryHolder holder, int position) {
         Repository repository = repositoryList.get(position);
-        holder.tvName.setText(repository.getName());
-        holder.tvDescription.setText(repository.getDescription());
-        holder.tvUsername.setText(repository.getOwner());
-        if (repository.getFork().equals("true")) {
-            holder.lContainer.setBackgroundColor(mContext.getResources().getColor(R.color.white));
+        if (repository.getId() != null) {
+            holder.tvName.setText(repository.getName());
+            holder.tvDescription.setText(repository.getDescription());
+            holder.tvUsername.setText(repository.getOwner().getLogin());
+            if (repository.getFork().equals("true")) {
+                holder.cardView.setBackgroundColor(Color.WHITE);
+            }
         }
     }
 
@@ -59,8 +63,8 @@ public class RepositoriesAdapter extends RecyclerView.Adapter<RepositoriesAdapte
         TextView tvName;
         @BindView(R.id.tv_owner_username)
         TextView tvUsername;
-        @BindView(R.id.container)
-        RelativeLayout lContainer;
+        @BindView(R.id.cv)
+        CardView cardView;
 
         public RepositoryHolder(View itemView) {
             super(itemView);

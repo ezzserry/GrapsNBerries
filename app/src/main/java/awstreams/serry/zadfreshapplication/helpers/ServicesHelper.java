@@ -26,7 +26,7 @@ public class ServicesHelper {
     }
 
     public void getRepos(Context context, String page, Response.Listener<JSONArray> success, Response.ErrorListener errorListener) {
-        String URL = Constants.URL;
+        URL = Constants.URL;
         URL = String.format(URL, page);
         JsonArrayRequest request = new JsonArrayRequest(URL, success, errorListener);
         request.setRetryPolicy(new DefaultRetryPolicy(
