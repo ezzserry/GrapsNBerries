@@ -1,6 +1,8 @@
 package awstreams.serry.zadfreshapplication.activities;
 
 import android.content.DialogInterface;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
 import android.support.v4.widget.SwipeRefreshLayout;
@@ -56,8 +58,6 @@ public class MainActivity extends AppCompatActivity implements OnItemLongListene
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
         initViews();
-        getRepositories(repositoryPage);
-
     }
 
     private void initViews() {
@@ -69,8 +69,17 @@ public class MainActivity extends AppCompatActivity implements OnItemLongListene
 
         if (checkConnection())
             getRepositories(repositoryPage);
-        else
-            Snackbar.make(rvRepositories, "check your connection", Snackbar.LENGTH_LONG).setAction("Action", null).show();
+        else {
+
+            List<RepositoryModel> repositoryModels = SQLite.select().from(RepositoryModel.class).queryList();
+            if (repositoryModels.size() >= 1) {
+                for (RepositoryModel repositoryModel : repositoryModels) {
+                    repositoryList.add(repositoryModel.getRepository());
+                }
+                repositoriesAdapter.notifyItemRangeInserted(repositoriesAdapter.getItemCount(), repositoryList.size() - 1);
+            } else
+                Snackbar.make(rvRepositories, "no saved data", Snackbar.LENGTH_LONG).setAction("Action", null).show();
+        }
 
         rvRepositories.addOnScrollListener(new EndlessRecyclerViewScrollListener(layoutManager) {
             @Override
@@ -78,21 +87,17 @@ public class MainActivity extends AppCompatActivity implements OnItemLongListene
                 if (checkConnection()) {
                     repositoryPage++;
                     getRepositories(repositoryPage);
-                } else {
-                    List<RepositoryModel> repositoryModels = SQLite.select().from(RepositoryModel.class).queryList();
-                    if (repositoryModels.size() >= 1) {
-                        for (RepositoryModel repositoryModel : repositoryModels) {
-                            repositoryList.add(repositoryModel.getRepository());
-                        }
-                        repositoriesAdapter.notifyItemRangeInserted(repositoriesAdapter.getItemCount(), repositoryList.size() - 1);
-                    }
-                }
+                } else
+                    Snackbar.make(rvRepositories, "couldn't load more", Snackbar.LENGTH_LONG).setAction("Action", null).show();
+
             }
         });
         swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
                 if (checkConnection()) {
+                    RepositoryModel repositoryModel = new RepositoryModel();
+                    repositoryModel.delete();
                     getRepositories(0);
                 } else {
                     Snackbar.make(rvRepositories, "could't refresh now", Snackbar.LENGTH_LONG).setAction("Action", null).show();
@@ -104,7 +109,7 @@ public class MainActivity extends AppCompatActivity implements OnItemLongListene
     }
 
     private void getRepositories(int page) {
-        ServicesHelper.getInstance().getRepos(this, String.valueOf(page), new Response.Listener<JSONArray>() {
+        ServicesHelper.getInstance().getRepository(this, String.valueOf(page), new Response.Listener<JSONArray>() {
             @Override
             public void onResponse(JSONArray response) {
                 Log.e("response", response.toString());
@@ -116,8 +121,9 @@ public class MainActivity extends AppCompatActivity implements OnItemLongListene
                 repositoriesAdapter.notifyItemRangeInserted(repositoriesAdapter.getItemCount(), repositoryList.size() - 1);
                 Log.e("list size", repositoryList.size() + "");
                 for (Repository repository : repositoryList) {
-                    RepositoryModel categoryModel = new RepositoryModel(repository.getId(), repository.getName(), repository.getDescription(), repository.getFork(), repository.getOwner().getLogin(), repository.getOwner().getHtml_url());
-                    categoryModel.save();
+                    RepositoryModel repositoryModel = new RepositoryModel(repository.getId(), repository.getName(), repository.getDescription(), repository.getFork(), repository.getHtml_url(),
+                            repository.getOwner().getLogin(), repository.getOwner().getHtml_url());
+                    repositoryModel.save();
                 }
 
                 if (swipeRefreshLayout.isRefreshing())
@@ -126,7 +132,7 @@ public class MainActivity extends AppCompatActivity implements OnItemLongListene
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-                Snackbar.make(rvRepositories, "check your connection", Snackbar.LENGTH_LONG).setAction("Action", null).show();
+                Snackbar.make(rvRepositories, "check your connection error", Snackbar.LENGTH_LONG).setAction("Action", null).show();
                 if (swipeRefreshLayout.isRefreshing())
                     swipeRefreshLayout.setRefreshing(false);
             }
@@ -143,27 +149,30 @@ public class MainActivity extends AppCompatActivity implements OnItemLongListene
 
     }
 
-    public void updateUI(List<Repository> repositoryList) {
-//        progressBar.setVisibility(View.GONE);
-        rvRepositories.setVisibility(View.VISIBLE);
-        repositoriesAdapter = new RepositoriesAdapter(repositoryList, this);
-        rvRepositories.setAdapter(repositoriesAdapter);
-        repositoriesAdapter.notifyDataSetChanged();
-    }
 
     @Override
-    public void OnLongItemClick(Repository repositoryItem) {
+    public void OnLongItemClick(final Repository repositoryItem) {
         new AlertDialog.Builder(this)
-                .setTitle("Delete entry")
-                .setMessage("Are you sure you want to delete this entry?")
-                .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                .setTitle("Zad Fresh Task")
+                .setMessage("Choose from the next urls ?")
+                .setPositiveButton("show repository's url", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int which) {
-                        // continue with delete
+                        Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(repositoryItem.getHtml_url()));
+                        startActivity(browserIntent);
                     }
                 })
-                .setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
+                .setNegativeButton("show owner's url", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int which) {
-                        // do nothing
+                        Intent browserIntent;
+
+                        try {
+
+                            browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(repositoryItem.getOwner().getHtml_url()));
+                        } catch (NullPointerException e) {
+                            browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(repositoryItem.getOwnerHtmlUrl()));
+
+                        }
+                        startActivity(browserIntent);
                     }
                 })
                 .setIcon(android.R.drawable.ic_dialog_alert)

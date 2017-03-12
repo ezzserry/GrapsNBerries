@@ -17,17 +17,20 @@ public class Repository implements Serializable {
     String description;
     @SerializedName("fork")
     String fork;
+    @SerializedName("html_url")
+    String html_url;
     @SerializedName("owner")
     Owner owner;
 
     String ownerUsername;
     String ownerHtmlUrl;
 
-    public Repository(String id, String name, String description, String fork, String ownerUsername, String ownerHtmlUrl) {
+    public Repository(String id, String name, String description, String fork, String html_url, String ownerUsername, String ownerHtmlUrl) {
         this.id = id;
         this.name = name;
         this.description = description;
         this.fork = fork;
+        this.html_url = html_url;
         this.ownerUsername = ownerUsername;
         this.ownerHtmlUrl = ownerHtmlUrl;
     }
@@ -89,5 +92,13 @@ public class Repository implements Serializable {
 
     public void setOwnerHtmlUrl(String ownerHtmlUrl) {
         this.ownerHtmlUrl = ownerHtmlUrl;
+    }
+
+    public String getHtml_url() {
+        return html_url;
+    }
+
+    public void setHtml_url(String html_url) {
+        this.html_url = html_url;
     }
 }

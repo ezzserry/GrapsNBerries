@@ -29,6 +29,7 @@ public class RepositoriesAdapter extends RecyclerView.Adapter<RepositoriesAdapte
     private List<Repository> repositoryList;
     private Context mContext;
     OnItemLongListener onItemLongListener;
+
     public RepositoriesAdapter(List<Repository> repositoryList, Context mContext) {
         this.repositoryList = repositoryList;
         this.mContext = mContext;
@@ -38,7 +39,7 @@ public class RepositoriesAdapter extends RecyclerView.Adapter<RepositoriesAdapte
 
     @Override
     public RepositoriesAdapter.RepositoryHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.repo_item, parent,false);
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.repo_item, parent, false);
         RepositoriesAdapter.RepositoryHolder productHolder = new RepositoriesAdapter.RepositoryHolder(view);
         return productHolder;
     }
@@ -46,30 +47,34 @@ public class RepositoriesAdapter extends RecyclerView.Adapter<RepositoriesAdapte
     @Override
     public void onBindViewHolder(RepositoriesAdapter.RepositoryHolder holder, final int position) {
         Repository repository = repositoryList.get(position);
-        Log.e("bind item",repository.getName());
+        Log.e("bind item", repository.getName());
 
-        if (repository.getId() != null&&repository.getName()!=null) {
+        if (repository.getId() != null && repository.getName() != null) {
             holder.tvName.setText(repository.getName());
             holder.tvDescription.setText(repository.getDescription());
-            holder.tvUsername.setText(repository.getOwner().getLogin());
+            try {
+
+                holder.tvUsername.setText(repository.getOwner().getLogin());
+            } catch (NullPointerException e) {
+                holder.tvUsername.setText(repository.getOwnerUsername());
+
+            }
             if (repository.getFork().equals("true")) {
                 holder.cardView.setBackgroundColor(Color.WHITE);
-            }
-            else if (repository.getFork().equals("false")||repository.getFork().equals(""))
-            {
+            } else if (repository.getFork().equals("false") || repository.getFork().equals("")) {
                 holder.cardView.setBackgroundColor(Color.GREEN);
             }
 
-          holder.cardView.setOnLongClickListener(new View.OnLongClickListener() {
-              @Override
-              public boolean onLongClick(View view) {
-                  if (onItemLongListener != null) {
-                      Repository repositoryItem = repositoryList.get(position);
-                      onItemLongListener.OnLongItemClick(repositoryItem);
-                  }
-                  return false;
-              }
-          });
+            holder.cardView.setOnLongClickListener(new View.OnLongClickListener() {
+                @Override
+                public boolean onLongClick(View view) {
+                    if (onItemLongListener != null) {
+                        Repository repositoryItem = repositoryList.get(position);
+                        onItemLongListener.OnLongItemClick(repositoryItem);
+                    }
+                    return false;
+                }
+            });
         }
     }
 

@@ -16,11 +16,12 @@ public class RepositoryModel extends BaseModel {
     public RepositoryModel() {
     }
 
-    public RepositoryModel(String id, String repoName, String description, String fork, String ownerName, String ownerHtmlUrl) {
+    public RepositoryModel(String id, String name, String description, String fork, String htmlUrl, String ownerName, String ownerHtmlUrl) {
         this.id = id;
-        this.repoName = repoName;
+        this.name = name;
         this.description = description;
         this.fork = fork;
+        this.htmlUrl = htmlUrl;
         this.ownerName = ownerName;
         this.ownerHtmlUrl = ownerHtmlUrl;
     }
@@ -30,7 +31,7 @@ public class RepositoryModel extends BaseModel {
     String id;
 
     @Column
-    String repoName;
+    String name;
 
     @Column
     String description;
@@ -39,13 +40,16 @@ public class RepositoryModel extends BaseModel {
     String fork;
 
     @Column
+    String htmlUrl;
+
+    @Column
     String ownerName;
 
     @Column
     String ownerHtmlUrl;
 
     public Repository getRepository() {
-        return new Repository(id,repoName,description,fork,ownerName,ownerHtmlUrl);
+        return new Repository(id, name, description, fork, htmlUrl, ownerName, ownerHtmlUrl);
     }
 
 }
