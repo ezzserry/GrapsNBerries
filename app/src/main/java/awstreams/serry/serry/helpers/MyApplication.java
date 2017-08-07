@@ -1,4 +1,4 @@
-package awstreams.serry.zadfreshapplication.helpers;
+package awstreams.serry.serry.helpers;
 
 import android.app.Application;
 
@@ -6,7 +6,7 @@ import com.raizlabs.android.dbflow.config.FlowConfig;
 import com.raizlabs.android.dbflow.config.FlowManager;
 
 /**
- * Created by PC on 3/12/2017.
+ * Created by Serry on 7/8/2017.
  */
 
 public class MyApplication extends Application {

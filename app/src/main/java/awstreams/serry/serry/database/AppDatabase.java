@@ -1,9 +1,9 @@
-package awstreams.serry.zadfreshapplication.database;
+package awstreams.serry.serry.database;
 
 import com.raizlabs.android.dbflow.annotation.Database;
 
 /**
- * Created by PC on 3/8/2017.
+ * Created by Serry on 7/8/2017.
  */
 @Database(name = AppDatabase.NAME, version = AppDatabase.VERSION)
 public class AppDatabase {

@@ -1,4 +1,4 @@
-package awstreams.serry.zadfreshapplication.helpers;
+package awstreams.serry.serry.helpers;
 
 import android.content.Context;
 import android.net.ConnectivityManager;

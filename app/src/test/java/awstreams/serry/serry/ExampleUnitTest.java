@@ -1,4 +1,4 @@
-package awstreams.serry.zadfreshapplication;
+package awstreams.serry.serry;
 
 import org.junit.Test;
 

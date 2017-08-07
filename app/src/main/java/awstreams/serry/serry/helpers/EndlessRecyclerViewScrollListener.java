@@ -1,4 +1,4 @@
-package awstreams.serry.zadfreshapplication.helpers;
+package awstreams.serry.serry.helpers;
 
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;

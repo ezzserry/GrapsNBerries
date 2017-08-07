@@ -1,4 +1,4 @@
-package awstreams.serry.zadfreshapplication;
+package awstreams.serry.serry;
 
 import android.content.Context;
 import android.support.test.InstrumentationRegistry;
